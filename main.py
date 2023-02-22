@@ -19,10 +19,22 @@ template_id = os.environ["TEMPLATE_ID"]
 
 
 def get_weather():
-  url = "http://autodev.openspeech.cn/csp/api/v2.1/weather?openId=aiuicus&clientType=android&sign=android&city=" + city
-  res = requests.get(url).json()
-  weather = res['data']['list'][0]
-  return weather['weather'], math.floor(weather['temp'])
+    city_url = f'https://geoapi.qweather.com/v2/city/lookup?location={city}&key=9501d2e96cc54d47ae016ccdc6fb5b13'
+    city_json = requests.get(city_url).json()
+    if city_json.get('code') == '200':
+        location_id = city_json.get('location')[0].get('id')
+    else:
+        print("Error, not get city's location id.")
+
+    url = f'https://devapi.qweather.com/v7/weather/3d?location={location_id}&key=9501d2e96cc54d47ae016ccdc6fb5b13' 
+    weather_json = requests.get(url).json()
+    if weather_json.get('code') == '200':
+        res = weather_json['daily'][0]
+        weather = res['textDay'] + "（白天） ~ " + res['textNight'] + "（晚上）"
+        temp = res['tempMin'] + ' ~ ' + res['tempMax'] + '°C'
+        return weather, temp
+    else:
+        print("Error, not get weather info.")
 
 def get_count():
   delta = today - datetime.strptime(start_date, "%Y-%m-%d")
